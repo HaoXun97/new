@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統診斷 - 氣象資訊查詢系統</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/diagnosis.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>🔧 系統診斷</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">返回主頁</a></li>
+                    <li><a href="#overview">系統概覽</a></li>
+                    <li><a href="#components">組件狀態</a></li>
+                    <li><a href="#details">詳細資訊</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 系統概覽 -->
+        <section id="overview" class="diagnosis-section">
+            <h2>系統概覽</h2>
+            <div id="system-overview" class="overview-container">
+                <div class="loading">正在檢測系統狀態...</div>
+            </div>
+            <div class="actions">
+                <button onclick="runDiagnosis()" class="btn-primary">重新檢測</button>
+                <button onclick="exportReport()" class="btn-secondary">匯出報告</button>
+            </div>
+        </section>
+
+        <!-- 組件狀態 -->
+        <section id="components" class="diagnosis-section">
+            <h2>組件狀態</h2>
+            <div id="components-status" class="components-grid">
+                <div class="loading">載入中...</div>
+            </div>
+        </section>
+
+        <!-- 詳細資訊 -->
+        <section id="details" class="diagnosis-section">
+            <h2>詳細資訊</h2>
+            <div id="detailed-info" class="details-container">
+                <div class="loading">載入中...</div>
+            </div>
+        </section>
+
+        <!-- 建議修復 -->
+        <section id="recommendations" class="diagnosis-section">
+            <h2>建議修復</h2>
+            <div id="fix-recommendations" class="recommendations-container">
+                <!-- 動態生成建議 -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 氣象資訊查詢系統 - 系統診斷工具</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/diagnosis.js"></script>
+</body>
+
+</html>

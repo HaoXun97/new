@@ -1,0 +1,340 @@
+/* 診斷專用樣式 */
+
+.diagnosis-section {
+  margin-bottom: 3rem;
+}
+
+.overview-container {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.system-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  border-radius: 15px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.system-status.healthy {
+  background: linear-gradient(135deg, #00b894, #00a085);
+  color: white;
+}
+
+.system-status.warning {
+  background: linear-gradient(135deg, #fdcb6e, #e17055);
+  color: white;
+}
+
+.system-status.error {
+  background: linear-gradient(135deg, #ff7675, #d63031);
+  color: white;
+}
+
+.status-icon {
+  font-size: 3rem;
+}
+
+.components-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.component-card {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.component-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.component-card:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.component-card.healthy:before {
+  background: linear-gradient(90deg, #00b894, #00a085);
+}
+
+.component-card.warning:before {
+  background: linear-gradient(90deg, #fdcb6e, #e17055);
+}
+
+.component-card.error:before {
+  background: linear-gradient(90deg, #ff7675, #d63031);
+}
+
+.component-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.component-icon {
+  font-size: 2rem;
+}
+
+.component-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.component-status {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.component-status.healthy {
+  background: #00b894;
+  color: white;
+}
+
+.component-status.warning {
+  background: #fdcb6e;
+  color: #333;
+}
+
+.component-status.error {
+  background: #ff7675;
+  color: white;
+}
+
+.component-message {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.component-details {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.detail-value {
+  color: #0984e3;
+  font-weight: bold;
+}
+
+.details-container {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.json-display {
+  background: #2d3748;
+  color: #e2e8f0;
+  padding: 1.5rem;
+  border-radius: 10px;
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-primary {
+  background: #0984e3;
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+.btn-primary:hover {
+  background: #0770c4;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.recommendations-container {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #fdcb6e;
+}
+
+.recommendation-item.error {
+  border-left-color: #ff7675;
+}
+
+.recommendation-icon {
+  font-size: 1.5rem;
+  color: #fdcb6e;
+}
+
+.recommendation-icon.error {
+  color: #ff7675;
+}
+
+.recommendation-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.recommendation-content p {
+  margin: 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.timestamp {
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .components-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .system-status {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .component-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}
+
+/* 動畫效果 */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.component-card.loading {
+  animation: pulse 2s infinite;
+}
+
+/* 進度條 */
+.progress-bar {
+  background: #e9ecef;
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.healthy {
+  background: #00b894;
+}
+
+.progress-fill.warning {
+  background: #fdcb6e;
+}
+
+.progress-fill.error {
+  background: #ff7675;
+}
