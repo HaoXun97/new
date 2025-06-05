@@ -172,11 +172,21 @@ class WeatherApp {
     if (!dateString) return "無資料";
 
     try {
-      // 直接使用從API回傳的時間字串，不再額外轉換
-      return dateString;
+      // API已經回傳台灣時間，直接使用
+      // 可選：重新格式化顯示方式
+      const date = new Date(dateString + " GMT+0800");
+      return date.toLocaleString("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
     } catch (error) {
       console.error("時間格式化錯誤:", error);
-      return "時間格式錯誤";
+      // 如果格式化失敗，直接回傳原始字串
+      return dateString;
     }
   }
 

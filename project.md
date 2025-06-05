@@ -209,4 +209,24 @@ CREATE TABLE IF NOT EXISTS weather_data (
    - 配置檔案不可被網頁直接存取
    - 設定適當的目錄權限
 
+## 時間處理說明
+
+### 資料庫時間格式
+
+- **儲存格式**: UTC+0 (協調世界時)
+- **顯示格式**: UTC+8 (台灣標準時間)
+- **轉換方式**: 在 SQL 查詢中使用 `DATE_ADD(time_column, INTERVAL 8 HOUR)` 轉換
+
+### API 時間回應
+
+- 所有時間欄位已轉換為台灣時間
+- 格式: `YYYY-MM-DD HH:MM:SS`
+- 時區: UTC+8 (Asia/Taipei)
+
+### 時間欄位說明
+
+- `update_time`: 氣象資料更新時間 (台灣時間)
+- `created_at`: 記錄建立時間 (台灣時間)
+- `timestamp`: API 回應時間戳記 (台灣時間)
+
 這樣的架構實現了自動化資料獲取，減輕 EC2 負擔並提高系統效率。
