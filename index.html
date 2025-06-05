@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>氣象資訊查詢系統</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>🌤️ 氣象資訊查詢系統</h1>
+            <nav>
+                <ul>
+                    <li><a href="#current">即時天氣</a></li>
+                    <li><a href="#search">地點查詢</a></li>
+                    <li><a href="#history">歷史資料</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 即時天氣區塊 -->
+        <section id="current" class="weather-section">
+            <h2>即時天氣</h2>
+            <div id="current-weather" class="weather-card">
+                <div class="loading">載入中...</div>
+            </div>
+        </section>
+
+        <!-- 地點查詢區塊 -->
+        <section id="search" class="weather-section">
+            <h2>地點查詢</h2>
+            <div class="search-form">
+                <input type="text" id="location-input" placeholder="請輸入地點名稱">
+                <button onclick="searchWeather()">搜尋</button>
+            </div>
+            <div id="search-result" class="weather-card"></div>
+        </section>
+
+        <!-- 歷史資料區塊 -->
+        <section id="history" class="weather-section">
+            <h2>最近更新</h2>
+            <div id="weather-list" class="weather-list">
+                <div class="loading">載入中...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 氣象資訊查詢系統 - AWS EC2 + RDS + S3 + Lambda</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/weather.js"></script>
+</body>
+
+</html>
