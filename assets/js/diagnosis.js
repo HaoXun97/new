@@ -182,36 +182,133 @@ class DiagnosisApp {
       const otherDetails = { ...details };
       delete otherDetails.results;
 
-      detailsHtml += Object.entries(otherDetails)
-        .map(([key, value]) => {
-          const label = this.getDetailLabel(key);
-          const formattedValue = this.formatDetailValue(key, value);
+      detailsHtml += this.renderOtherDetails(otherDetails);
+    }
+    // 特殊處理 Web 伺服器資訊
+    else if (
+      details.extension_status &&
+      typeof details.extension_status === "object"
+    ) {
+      detailsHtml += this.renderExtensionStatus(details.extension_status);
+      detailsHtml += this.renderFixCommands(details.fix_commands);
 
-          return `
-          <div class="detail-item">
-            <div class="detail-label">${label}</div>
-            <div class="detail-value">${formattedValue}</div>
-          </div>
-        `;
-        })
-        .join("");
+      // 顯示其他詳細資訊
+      const otherDetails = { ...details };
+      delete otherDetails.extension_status;
+      delete otherDetails.fix_commands;
+      delete otherDetails.server_info; // 伺服器資訊太長，暫時隱藏
+
+      detailsHtml += this.renderOtherDetails(otherDetails);
     } else {
-      detailsHtml = Object.entries(details)
-        .map(([key, value]) => {
-          const label = this.getDetailLabel(key);
-          const formattedValue = this.formatDetailValue(key, value);
-
-          return `
-          <div class="detail-item">
-            <div class="detail-label">${label}</div>
-            <div class="detail-value">${formattedValue}</div>
-          </div>
-        `;
-        })
-        .join("");
+      detailsHtml = this.renderOtherDetails(details);
     }
 
     return detailsHtml;
+  }
+
+  renderOtherDetails(details) {
+    return Object.entries(details)
+      .map(([key, value]) => {
+        const label = this.getDetailLabel(key);
+        const formattedValue = this.formatDetailValue(key, value);
+
+        return `
+        <div class="detail-item">
+          <div class="detail-label">${label}</div>
+          <div class="detail-value">${formattedValue}</div>
+        </div>
+      `;
+      })
+      .join("");
+  }
+
+  renderExtensionStatus(extensionStatus) {
+    if (!extensionStatus || typeof extensionStatus !== "object") return "";
+
+    return `
+      <div class="extension-status">
+        <div class="extension-status-title">PHP 擴展狀態:</div>
+        ${Object.entries(extensionStatus)
+          .map(
+            ([extension, status]) => `
+          <div class="extension-item ${status.loaded ? "loaded" : "missing"} ${
+              status.required ? "required" : "optional"
+            }">
+            <div class="extension-name">
+              ${extension.toUpperCase()}
+              ${
+                status.required
+                  ? '<span class="required-badge">必需</span>'
+                  : '<span class="optional-badge">建議</span>'
+              }
+            </div>
+            <div class="extension-description">${status.description}</div>
+            <div class="extension-status-indicator">
+              ${
+                status.loaded
+                  ? '<span class="status-loaded">✅ 已載入</span>'
+                  : '<span class="status-missing">❌ 未安裝</span>'
+              }
+            </div>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  renderFixCommands(fixCommands) {
+    if (
+      !fixCommands ||
+      typeof fixCommands !== "object" ||
+      Object.keys(fixCommands).length === 0
+    ) {
+      return '<div class="fix-commands-none">✅ 無需修復，所有必要擴展都已安裝</div>';
+    }
+
+    return `
+      <div class="fix-commands">
+        <div class="fix-commands-title">🔧 修復指令:</div>
+        ${Object.entries(fixCommands)
+          .map(
+            ([osType, commandSet]) => `
+          <div class="command-set">
+            <div class="command-set-title">${commandSet.title}</div>
+            <div class="command-list">
+              ${commandSet.commands
+                .map((cmd) => {
+                  if (
+                    cmd.startsWith("#") ||
+                    cmd.startsWith("//") ||
+                    cmd.match(/^\d+\./)
+                  ) {
+                    return `<div class="command-comment">${cmd}</div>`;
+                  } else if (cmd.trim() === "") {
+                    return '<div class="command-spacing"></div>';
+                  } else {
+                    return `<div class="command-line">${cmd}</div>`;
+                  }
+                })
+                .join("")}
+            </div>
+            <button class="copy-commands-btn" onclick="copyToClipboard('${commandSet.commands
+              .filter(
+                (cmd) =>
+                  !cmd.startsWith("#") &&
+                  !cmd.startsWith("//") &&
+                  !cmd.match(/^\d+\./) &&
+                  cmd.trim() !== ""
+              )
+              .join("\\n")}')">
+              📋 複製指令
+            </button>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `;
   }
 
   renderApiResults(results) {
@@ -398,9 +495,9 @@ class DiagnosisApp {
         icon: "🌐",
       },
       web_server: {
-        title: "Web 伺服器配置異常",
+        title: "Web 伺服器配置異常 - PHP 擴展缺失",
         description:
-          "Web 伺服器配置有問題，請檢查 PHP 擴展是否完整安裝，Apache 模組是否正確載入。",
+          "系統檢測到缺少關鍵的 PHP 擴展（如 PDO）。請按照診斷報告中的修復指令安裝缺失的擴展，然後重啟 Web 伺服器。這是導致系統無法正常運作的主要原因。",
         icon: "🖥️",
       },
       https_ssl: {
@@ -537,11 +634,16 @@ class DiagnosisApp {
       healthy_endpoints: "正常端點",
       warning_endpoints: "警告端點",
       error_endpoints: "錯誤端點",
+      average_response_time: "平均回應時間",
       server_info: "伺服器資訊",
       required_extensions: "必要擴展",
       loaded_extensions_count: "已載入擴展數",
       missing_extensions: "缺失擴展",
       php_ini_loaded: "PHP 配置檔",
+      extension_status: "PHP 擴展狀態",
+      php_config: "PHP 配置",
+      os_type: "作業系統類型",
+      fix_commands: "修復指令",
     };
     return labels[key] || key;
   }
@@ -609,6 +711,43 @@ function exportReport() {
   if (window.diagnosisApp) {
     window.diagnosisApp.exportReport();
   }
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        alert("指令已複製到剪貼簿！");
+      })
+      .catch((err) => {
+        console.error("複製失敗:", err);
+        fallbackCopyToClipboard(text);
+      });
+  } else {
+    fallbackCopyToClipboard(text);
+  }
+}
+
+function fallbackCopyToClipboard(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  textArea.style.left = "-999999px";
+  textArea.style.top = "-999999px";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+
+  try {
+    document.execCommand("copy");
+    alert("指令已複製到剪貼簿！");
+  } catch (err) {
+    console.error("複製失敗:", err);
+    alert("複製失敗，請手動複製指令");
+  }
+
+  document.body.removeChild(textArea);
 }
 
 // 初始化應用程式
