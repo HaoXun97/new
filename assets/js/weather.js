@@ -46,7 +46,7 @@ class WeatherApp {
       const response = await this.fetchWeatherData("latest");
 
       if (response.success && response.data) {
-        container.innerHTML = this.renderWeatherCard(response.data);
+        container.innerHTML = this.renderWeatherGrid(response.data);
       } else {
         container.innerHTML = '<div class="error">目前無可用的氣象資料</div>';
       }
@@ -88,13 +88,69 @@ class WeatherApp {
       const response = await this.fetchWeatherData("location", { location });
 
       if (response.success && response.data) {
-        container.innerHTML = this.renderWeatherCard(response.data);
+        container.innerHTML = this.renderWeatherGrid(response.data);
       } else {
         container.innerHTML = '<div class="error">查無該地點的氣象資料</div>';
       }
     } catch (error) {
       container.innerHTML = `<div class="error">搜尋失敗: ${error.message}</div>`;
     }
+  }
+
+  renderWeatherGrid(weather) {
+    const updateTime = new Date(weather.update_time).toLocaleString("zh-TW");
+
+    return `
+            <div class="location-header">
+                📍 ${weather.location}
+            </div>
+            
+            <div class="weather-info-card">
+                <div class="weather-icon">☁️</div>
+                <div class="weather-label">天氣狀況</div>
+                <div class="weather-value">${
+                  weather.weather_condition || "--"
+                }</div>
+            </div>
+            
+            <div class="weather-info-card">
+                <div class="weather-icon">🌧️</div>
+                <div class="weather-label">降雨機率</div>
+                <div class="weather-value probability">${
+                  weather.rainfall_probability || "--"
+                }%</div>
+            </div>
+            
+            <div class="weather-info-card">
+                <div class="weather-icon">🌡️</div>
+                <div class="weather-label">最低溫度</div>
+                <div class="weather-value temperature">${
+                  weather.min_temperature || "--"
+                }°C</div>
+            </div>
+            
+            <div class="weather-info-card">
+                <div class="weather-icon">🌡️</div>
+                <div class="weather-label">最高溫度</div>
+                <div class="weather-value temperature">${
+                  weather.max_temperature || "--"
+                }°C</div>
+            </div>
+            
+            <div class="weather-info-card">
+                <div class="weather-icon">😊</div>
+                <div class="weather-label">舒適度</div>
+                <div class="weather-value comfort">${
+                  weather.comfort_level || "--"
+                }</div>
+            </div>
+            
+            <div class="weather-info-card">
+                <div class="weather-icon">🕐</div>
+                <div class="weather-label">最後更新</div>
+                <div class="weather-value time">${updateTime}</div>
+            </div>
+        `;
   }
 
   renderWeatherCard(weather) {
@@ -106,38 +162,20 @@ class WeatherApp {
                 <div class="weather-info">
                     <div class="info-item">
                         <div class="info-label">天氣狀況</div>
-                        <div class="info-value">${
-                          weather.weather_condition
-                        }</div>
+                        <div class="info-value">${weather.weather_condition}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">降雨機率</div>
-                        <div class="info-value probability">${
-                          weather.rainfall_probability
-                        }%</div>
+                        <div class="info-value probability">${weather.rainfall_probability}%</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">最低溫度</div>
-                        <div class="info-value temperature">${
-                          weather.min_temperature
-                        }°C</div>
+                        <div class="info-value temperature">${weather.min_temperature}°C</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">最高溫度</div>
-                        <div class="info-value temperature">${
-                          weather.max_temperature
-                        }°C</div>
+                        <div class="info-value temperature">${weather.max_temperature}°C</div>
                     </div>
-                    ${
-                      weather.current_temperature
-                        ? `
-                    <div class="info-item">
-                        <div class="info-label">目前溫度</div>
-                        <div class="info-value temperature">${weather.current_temperature}°C</div>
-                    </div>
-                    `
-                        : ""
-                    }
                     <div class="info-item">
                         <div class="info-label">舒適度</div>
                         <div class="info-value">${weather.comfort_level}</div>
