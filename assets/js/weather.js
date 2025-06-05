@@ -167,28 +167,13 @@ class WeatherApp {
     });
   }
 
-  // 新增格式化台灣時間的方法
+  // 簡化時間格式化方法
   formatTaiwanTime(dateString) {
     if (!dateString) return "無資料";
 
     try {
-      // 建立Date物件並轉換為台灣時間
-      const date = new Date(dateString);
-
-      // 設定為台灣時區 (UTC+8)
-      const taiwanTime = new Date(date.getTime() + 8 * 60 * 60 * 1000);
-
-      // 格式化為台灣時間格式
-      return taiwanTime.toLocaleString("zh-TW", {
-        timeZone: "Asia/Taipei",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      });
+      // 直接使用從API回傳的時間字串，不再額外轉換
+      return dateString;
     } catch (error) {
       console.error("時間格式化錯誤:", error);
       return "時間格式錯誤";

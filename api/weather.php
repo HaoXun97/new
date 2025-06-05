@@ -41,8 +41,8 @@ try {
             
         case 'list':
             $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, 
-                     DATE_FORMAT(CONVERT_TZ(update_time, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as update_time,
-                     DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as created_at 
+                     DATE_FORMAT(update_time, '%Y-%m-%d %H:%i:%s') as update_time,
+                     DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at 
                      FROM weather_data ORDER BY update_time DESC LIMIT 10";
             $stmt = $db->prepare($query);
             break;
@@ -55,8 +55,8 @@ try {
             }
             
             $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, 
-                     DATE_FORMAT(CONVERT_TZ(update_time, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as update_time,
-                     DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as created_at 
+                     DATE_FORMAT(update_time, '%Y-%m-%d %H:%i:%s') as update_time,
+                     DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at 
                      FROM weather_data WHERE location LIKE ? ORDER BY update_time DESC LIMIT 1";
             $stmt = $db->prepare($query);
             $stmt->bindValue(1, "%{$location}%");
@@ -64,8 +64,8 @@ try {
             
         case 'latest':
             $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, 
-                     DATE_FORMAT(CONVERT_TZ(update_time, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as update_time,
-                     DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as created_at 
+                     DATE_FORMAT(update_time, '%Y-%m-%d %H:%i:%s') as update_time,
+                     DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at 
                      FROM weather_data ORDER BY update_time DESC LIMIT 1";
             $stmt = $db->prepare($query);
             break;
@@ -77,8 +77,8 @@ try {
             
         case 'recent_by_location':
             $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, 
-                     DATE_FORMAT(CONVERT_TZ(update_time, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as update_time,
-                     DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as created_at 
+                     DATE_FORMAT(update_time, '%Y-%m-%d %H:%i:%s') as update_time,
+                     DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at 
                      FROM weather_data WHERE location IN (SELECT DISTINCT location FROM weather_data) 
                      GROUP BY location ORDER BY update_time DESC";
             $stmt = $db->prepare($query);
