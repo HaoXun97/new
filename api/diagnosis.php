@@ -187,6 +187,13 @@ try {
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
     
+    // SSL 檢測
+    $sslInfo = [
+        'https_enabled' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'ssl_protocol' => $_SERVER['SSL_PROTOCOL'] ?? 'Not Available',
+        'ssl_cipher' => $_SERVER['SSL_CIPHER'] ?? 'Not Available'
+    ];
+    
     foreach ($apiEndpoints as $name => $endpoint) {
         $startTime = microtime(true);
         try {
@@ -194,7 +201,7 @@ try {
             $baseUrl = rtrim(dirname(dirname($_SERVER['REQUEST_URI'])), '/');
             $url = "$protocol://$host$baseUrl/$endpoint";
             
-            // 使用 cURL 而不是 file_get_contents 以獲得更好的控制
+            // 使用 cURL 並針對 SSL 問題進行配置
             $ch = curl_init();
             curl_setopt_array($ch, [
                 CURLOPT_URL => $url,
@@ -202,7 +209,10 @@ try {
                 CURLOPT_TIMEOUT => 10,
                 CURLOPT_CONNECTTIMEOUT => 5,
                 CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_SSL_VERIFYPEER => false,
+                // SSL 相關設定
+                CURLOPT_SSL_VERIFYPEER => false,  // 跳過 SSL 憑證驗證
+                CURLOPT_SSL_VERIFYHOST => false,  // 跳過主機名驗證
+                CURLOPT_SSLVERSION => CURL_SSLVERSION_DEFAULT,
                 CURLOPT_USERAGENT => 'Weather System Diagnosis Tool',
                 CURLOPT_HTTPHEADER => [
                     'Accept: application/json',
@@ -213,17 +223,40 @@ try {
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $curlError = curl_error($ch);
+            $curlErrno = curl_errno($ch);
             $responseTime = round((microtime(true) - $startTime) * 1000, 2);
+            
+            // 取得更多 cURL 資訊
+            $curlInfo = curl_getinfo($ch);
             curl_close($ch);
             
             if ($response === false || !empty($curlError)) {
+                // 分析錯誤類型
+                $errorType = 'unknown';
+                $errorSuggestion = '';
+                
+                if ($curlErrno === CURLE_SSL_CONNECT_ERROR || $curlErrno === CURLE_SSL_PEER_CERTIFICATE || $curlErrno === CURLE_SSL_CACERT) {
+                    $errorType = 'ssl_error';
+                    $errorSuggestion = 'SSL 憑證問題：建議檢查 SSL 憑證配置或使用 HTTP 協定';
+                } elseif ($curlErrno === CURLE_OPERATION_TIMEDOUT) {
+                    $errorType = 'timeout';
+                    $errorSuggestion = '連線逾時：檢查網路連線和伺服器回應時間';
+                } elseif ($curlErrno === CURLE_COULDNT_CONNECT) {
+                    $errorType = 'connection_failed';
+                    $errorSuggestion = '無法連線：檢查伺服器是否正在運行';
+                }
+                
                 $apiResults[$name] = [
                     'status' => 'error',
                     'response_code' => 'curl_error',
                     'response_time' => $responseTime . 'ms',
                     'success' => false,
                     'error' => $curlError ?: 'cURL request failed',
-                    'url' => $url
+                    'error_code' => $curlErrno,
+                    'error_type' => $errorType,
+                    'suggestion' => $errorSuggestion,
+                    'url' => $url,
+                    'ssl_info' => $sslInfo
                 ];
             } elseif ($httpCode !== 200) {
                 $apiResults[$name] = [
@@ -233,7 +266,8 @@ try {
                     'success' => false,
                     'error' => "HTTP $httpCode error",
                     'url' => $url,
-                    'response_preview' => substr($response, 0, 200)
+                    'response_preview' => substr($response, 0, 200),
+                    'ssl_info' => $sslInfo
                 ];
             } else {
                 $data = json_decode($response, true);
@@ -245,7 +279,8 @@ try {
                         'success' => false,
                         'error' => 'Invalid JSON response: ' . json_last_error_msg(),
                         'url' => $url,
-                        'response_preview' => substr($response, 0, 200)
+                        'response_preview' => substr($response, 0, 200),
+                        'ssl_info' => $sslInfo
                     ];
                 } else {
                     $apiResults[$name] = [
@@ -254,7 +289,8 @@ try {
                         'response_time' => $responseTime . 'ms',
                         'success' => isset($data['success']) ? $data['success'] : true,
                         'url' => $url,
-                        'data_count' => isset($data['count']) ? $data['count'] : null
+                        'data_count' => isset($data['count']) ? $data['count'] : null,
+                        'ssl_info' => $sslInfo
                     ];
                 }
             }
@@ -266,7 +302,8 @@ try {
                 'response_time' => $responseTime . 'ms',
                 'success' => false,
                 'error' => $e->getMessage(),
-                'url' => isset($url) ? $url : 'URL construction failed'
+                'url' => isset($url) ? $url : 'URL construction failed',
+                'ssl_info' => $sslInfo
             ];
         }
     }
@@ -382,6 +419,56 @@ try {
             'disk_free_space' => formatBytes(disk_free_space('.')),
             'server_time' => date('Y-m-d H:i:s'),
             'timezone' => date_default_timezone_get()
+        ]
+    ];
+    
+    // 6. SSL/HTTPS 檢測 - 新增
+    $httpsStatus = 'healthy';
+    $httpsMessage = 'HTTP 連線正常';
+    
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        // 檢查 SSL 憑證資訊
+        $sslDetails = [
+            'protocol' => $_SERVER['SSL_PROTOCOL'] ?? 'Unknown',
+            'cipher' => $_SERVER['SSL_CIPHER'] ?? 'Unknown',
+            'server_name' => $_SERVER['SERVER_NAME'] ?? 'Unknown'
+        ];
+        
+        // 檢查是否有 SSL 相關錯誤
+        $hasSSLErrors = false;
+        foreach ($apiResults as $result) {
+            if (isset($result['error_type']) && $result['error_type'] === 'ssl_error') {
+                $hasSSLErrors = true;
+                break;
+            }
+        }
+        
+        if ($hasSSLErrors) {
+            $httpsStatus = 'warning';
+            $httpsMessage = 'HTTPS 已啟用但發現 SSL 憑證問題';
+        } else {
+            $httpsStatus = 'healthy';
+            $httpsMessage = 'HTTPS 已啟用且運作正常';
+        }
+        
+        $sslDetails['errors_detected'] = $hasSSLErrors;
+    } else {
+        $httpsStatus = 'warning';
+        $httpsMessage = '使用 HTTP 連線，建議啟用 HTTPS 以提高安全性';
+        $sslDetails = [
+            'enabled' => false,
+            'recommendation' => 'Consider enabling HTTPS for security'
+        ];
+    }
+    
+    $diagnosis['components']['https_ssl'] = [
+        'status' => $httpsStatus,
+        'message' => $httpsMessage,
+        'details' => [
+            'https_enabled' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+            'ssl_details' => $sslDetails,
+            'server_port' => $_SERVER['SERVER_PORT'] ?? 'Unknown',
+            'request_scheme' => $_SERVER['REQUEST_SCHEME'] ?? 'Unknown'
         ]
     ];
     

@@ -251,6 +251,30 @@ class DiagnosisApp {
                   : ""
               }
               ${
+                result.error_type
+                  ? `
+                <div class="api-detail ${
+                  result.error_type === "ssl_error" ? "ssl-error" : ""
+                }">
+                  <span class="api-label">錯誤類型:</span>
+                  <span class="api-value">${this.getErrorTypeText(
+                    result.error_type
+                  )}</span>
+                </div>
+              `
+                  : ""
+              }
+              ${
+                result.suggestion
+                  ? `
+                <div class="api-detail suggestion">
+                  <span class="api-label">建議:</span>
+                  <span class="api-value">${result.suggestion}</span>
+                </div>
+              `
+                  : ""
+              }
+              ${
                 result.url
                   ? `
                 <div class="api-detail">
@@ -277,6 +301,16 @@ class DiagnosisApp {
           .join("")}
       </div>
     `;
+  }
+
+  getErrorTypeText(errorType) {
+    const errorTypes = {
+      ssl_error: "SSL 憑證錯誤",
+      timeout: "連線逾時",
+      connection_failed: "連線失敗",
+      unknown: "未知錯誤",
+    };
+    return errorTypes[errorType] || errorType;
   }
 
   renderDetailedInfo() {
@@ -360,7 +394,7 @@ class DiagnosisApp {
       api_endpoints: {
         title: "API 端點連線異常",
         description:
-          "API 端點出現 timeout 或連線錯誤。請檢查：1) Web 伺服器是否正常運行 2) PHP 檔案權限是否正確 3) .htaccess 設定是否有效 4) 資料庫連線是否正常 5) 網路連線狀態。建議重啟 Apache 服務並檢查錯誤日誌。",
+          "API 端點出現 SSL 憑證錯誤或連線問題。建議：1) 如果是 SSL 問題，檢查憑證配置或暫時使用 HTTP 2) 檢查 Web 伺服器狀態 3) 確認防火牆設定 4) 重啟 Apache 服務。",
         icon: "🌐",
       },
       web_server: {
@@ -369,11 +403,11 @@ class DiagnosisApp {
           "Web 伺服器配置有問題，請檢查 PHP 擴展是否完整安裝，Apache 模組是否正確載入。",
         icon: "🖥️",
       },
-      data_integrity: {
-        title: "資料完整性異常",
+      https_ssl: {
+        title: "SSL 憑證問題",
         description:
-          "請檢查資料更新機制，確認 Lambda 函數是否正常執行，並檢查外部 API 連線狀態。",
-        icon: "📊",
+          "SSL 憑證配置異常。建議：1) 檢查憑證是否過期 2) 確認憑證鏈完整 3) 驗證主機名是否匹配 4) 考慮重新生成憑證或暫時使用 HTTP。",
+        icon: "🔒",
       },
     };
 
@@ -398,7 +432,7 @@ class DiagnosisApp {
       api_endpoints: {
         title: "部分 API 端點異常",
         description:
-          "某些 API 端點回應時間過長或回傳格式異常。建議檢查資料庫查詢效能，並確認所有依賴服務正常運行。",
+          "某些 API 端點回應異常或有 SSL 憑證警告。建議檢查相關功能並考慮 SSL 憑證配置。",
         icon: "🔄",
       },
       web_server: {
@@ -406,6 +440,12 @@ class DiagnosisApp {
         description:
           "Web 伺服器缺少某些 PHP 擴展，可能影響系統功能。建議安裝缺失的擴展以確保完整功能。",
         icon: "⚙️",
+      },
+      https_ssl: {
+        title: "HTTPS 配置建議",
+        description:
+          "目前使用 HTTP 連線，建議啟用 HTTPS 以提高安全性。或者需要檢查 SSL 憑證配置。",
+        icon: "🔐",
       },
     };
 
@@ -463,6 +503,7 @@ class DiagnosisApp {
       api_endpoints: "🌐",
       system_resources: "💻",
       web_server: "🖥️",
+      https_ssl: "🔒",
     };
     return icons[name] || "🔧";
   }
@@ -475,6 +516,7 @@ class DiagnosisApp {
       api_endpoints: "API 端點",
       system_resources: "系統資源",
       web_server: "Web 伺服器",
+      https_ssl: "HTTPS/SSL",
     };
     return titles[name] || name;
   }

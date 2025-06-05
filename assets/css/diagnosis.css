@@ -332,6 +332,23 @@
   margin: 0.25rem 0;
 }
 
+.api-detail.ssl-error {
+  background: rgba(255, 193, 7, 0.1);
+  border-left: 3px solid #ffc107;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.25rem 0;
+}
+
+.api-detail.suggestion {
+  background: rgba(23, 162, 184, 0.1);
+  border-left: 3px solid #17a2b8;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.25rem 0;
+  font-style: italic;
+}
+
 .api-label {
   font-weight: 500;
   color: #6c757d;
