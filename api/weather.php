@@ -1,26 +1,41 @@
 <?php
+// 關閉錯誤顯示，避免HTML錯誤訊息混入JSON回應
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-include_once '../config/database.php';
-
-$database = new Database();
-$db = $database->getConnection();
-
-if(!$db) {
-    http_response_code(500);
-    echo json_encode(["success" => false, "message" => "資料庫連線失敗"]);
-    exit;
-}
-
-$action = $_GET['action'] ?? 'list';
-$location = $_GET['location'] ?? '';
+// 確保輸出緩衝區清空
+ob_clean();
 
 try {
+    include_once '../config/database.php';
+    
+    $database = new Database();
+    $db = $database->getConnection();
+
+    if(!$db) {
+        throw new Exception("資料庫連線失敗");
+    }
+
+    $action = $_GET['action'] ?? 'list';
+    $location = $_GET['location'] ?? '';
+
     switch($action) {
+        case 'test':
+            // 測試端點
+            echo json_encode([
+                "success" => true,
+                "message" => "API 正常運作",
+                "timestamp" => date('Y-m-d H:i:s'),
+                "database_status" => $database->testConnection() ? "connected" : "disconnected"
+            ]);
+            exit;
+            
         case 'list':
             $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, update_time, created_at FROM weather_data ORDER BY update_time DESC LIMIT 10";
             $stmt = $db->prepare($query);
@@ -49,7 +64,14 @@ try {
             break;
             
         case 'recent_by_location':
-            $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, update_time, created_at FROM weather_data WHERE location IN (SELECT DISTINCT location FROM weather_data) GROUP BY location ORDER BY update_time DESC";
+            $query = "SELECT w1.id, w1.location, w1.weather_condition, w1.rainfall_probability, w1.min_temperature, w1.max_temperature, w1.comfort_level, w1.update_time, w1.created_at 
+                     FROM weather_data w1 
+                     INNER JOIN (
+                         SELECT location, MAX(update_time) as max_time 
+                         FROM weather_data 
+                         GROUP BY location
+                     ) w2 ON w1.location = w2.location AND w1.update_time = w2.max_time 
+                     ORDER BY w1.update_time DESC";
             $stmt = $db->prepare($query);
             break;
             

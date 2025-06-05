@@ -1,21 +1,42 @@
 class WeatherApp {
   constructor() {
-    this.apiBase = "/api/weather.php";
+    this.apiBase = "api/weather.php";
     this.init();
   }
 
   init() {
-    this.loadCurrentWeather();
-    this.loadWeatherList();
+    // 先測試API連線
+    this.testAPI()
+      .then(() => {
+        this.loadCurrentWeather();
+        this.loadWeatherList();
+      })
+      .catch((error) => {
+        console.error("API測試失敗:", error);
+        this.showError("API連線失敗，請檢查伺服器狀態");
+      });
 
     // 設定搜尋事件
-    document
-      .getElementById("location-input")
-      .addEventListener("keypress", (e) => {
+    const locationInput = document.getElementById("location-input");
+    if (locationInput) {
+      locationInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
           this.searchWeather();
         }
       });
+    }
+  }
+
+  async testAPI() {
+    try {
+      const response = await fetch(`${this.apiBase}?action=test`);
+      const data = await response.json();
+      console.log("API測試結果:", data);
+      return data;
+    } catch (error) {
+      console.error("API測試錯誤:", error);
+      throw error;
+    }
   }
 
   async fetchWeatherData(action, params = {}) {
@@ -25,8 +46,20 @@ class WeatherApp {
         ...params,
       });
 
+      console.log("請求URL:", `${this.apiBase}?${queryParams}`);
+
       const response = await fetch(`${this.apiBase}?${queryParams}`);
+
+      // 檢查回應的內容類型
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("非JSON回應:", text);
+        throw new Error("伺服器回應格式錯誤");
+      }
+
       const data = await response.json();
+      console.log("API回應:", data);
 
       if (!response.ok) {
         throw new Error(data.message || "請求失敗");
@@ -74,8 +107,15 @@ class WeatherApp {
   }
 
   async searchWeather() {
-    const location = document.getElementById("location-input").value.trim();
+    const locationInput = document.getElementById("location-input");
     const container = document.getElementById("search-result");
+
+    if (!locationInput || !container) {
+      console.error("找不到必要的HTML元素");
+      return;
+    }
+
+    const location = locationInput.value.trim();
 
     if (!location) {
       container.innerHTML = '<div class="error">請輸入地點名稱</div>';
@@ -97,12 +137,24 @@ class WeatherApp {
     }
   }
 
+  showError(message) {
+    const containers = ["current-weather", "search-result", "weather-list"];
+    containers.forEach((id) => {
+      const container = document.getElementById(id);
+      if (container) {
+        container.innerHTML = `<div class="error">${message}</div>`;
+      }
+    });
+  }
+
   renderWeatherGrid(weather) {
-    const updateTime = new Date(weather.update_time).toLocaleString("zh-TW");
+    const updateTime = weather.update_time
+      ? new Date(weather.update_time).toLocaleString("zh-TW")
+      : "無資料";
 
     return `
             <div class="location-header">
-                📍 ${weather.location}
+                📍 ${weather.location || "未知地點"}
             </div>
             
             <div class="weather-info-card">
@@ -117,7 +169,9 @@ class WeatherApp {
                 <div class="weather-icon">🌧️</div>
                 <div class="weather-label">降雨機率</div>
                 <div class="weather-value probability">${
-                  weather.rainfall_probability || "--"
+                  weather.rainfall_probability !== null
+                    ? weather.rainfall_probability
+                    : "--"
                 }%</div>
             </div>
             
@@ -125,7 +179,9 @@ class WeatherApp {
                 <div class="weather-icon">🌡️</div>
                 <div class="weather-label">最低溫度</div>
                 <div class="weather-value temperature">${
-                  weather.min_temperature || "--"
+                  weather.min_temperature !== null
+                    ? weather.min_temperature
+                    : "--"
                 }°C</div>
             </div>
             
@@ -133,7 +189,9 @@ class WeatherApp {
                 <div class="weather-icon">🌡️</div>
                 <div class="weather-label">最高溫度</div>
                 <div class="weather-value temperature">${
-                  weather.max_temperature || "--"
+                  weather.max_temperature !== null
+                    ? weather.max_temperature
+                    : "--"
                 }°C</div>
             </div>
             
@@ -154,31 +212,49 @@ class WeatherApp {
   }
 
   renderWeatherCard(weather) {
-    const updateTime = new Date(weather.update_time).toLocaleString("zh-TW");
+    const updateTime = weather.update_time
+      ? new Date(weather.update_time).toLocaleString("zh-TW")
+      : "無資料";
 
     return `
             <div class="weather-card">
-                <h3>${weather.location}</h3>
+                <h3>${weather.location || "未知地點"}</h3>
                 <div class="weather-info">
                     <div class="info-item">
                         <div class="info-label">天氣狀況</div>
-                        <div class="info-value">${weather.weather_condition}</div>
+                        <div class="info-value">${
+                          weather.weather_condition || "--"
+                        }</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">降雨機率</div>
-                        <div class="info-value probability">${weather.rainfall_probability}%</div>
+                        <div class="info-value probability">${
+                          weather.rainfall_probability !== null
+                            ? weather.rainfall_probability
+                            : "--"
+                        }%</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">最低溫度</div>
-                        <div class="info-value temperature">${weather.min_temperature}°C</div>
+                        <div class="info-value temperature">${
+                          weather.min_temperature !== null
+                            ? weather.min_temperature
+                            : "--"
+                        }°C</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">最高溫度</div>
-                        <div class="info-value temperature">${weather.max_temperature}°C</div>
+                        <div class="info-value temperature">${
+                          weather.max_temperature !== null
+                            ? weather.max_temperature
+                            : "--"
+                        }°C</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">舒適度</div>
-                        <div class="info-value">${weather.comfort_level}</div>
+                        <div class="info-value">${
+                          weather.comfort_level || "--"
+                        }</div>
                     </div>
                 </div>
                 <div style="text-align: center; margin-top: 1rem; color: #666; font-size: 0.9rem;">
@@ -191,7 +267,9 @@ class WeatherApp {
 
 // 全局函數供HTML調用
 function searchWeather() {
-  window.weatherApp.searchWeather();
+  if (window.weatherApp) {
+    window.weatherApp.searchWeather();
+  }
 }
 
 // 初始化應用程式
