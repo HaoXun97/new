@@ -75,39 +75,61 @@ nav a:hover {
 
 /* Main Content */
 main {
-  padding: 2rem 0;
+  padding: 2rem 0 4rem 0; /* 增加底部間距 */
 }
 
 .weather-section {
-  margin-bottom: 3rem;
+  margin-bottom: 4rem; /* 增加段落間距 */
 }
 
 .weather-section h2 {
   color: #f8f9fa;
-  margin-bottom: 1.5rem;
-  font-size: 1.5rem;
+  margin-bottom: 2rem; /* 增加標題下方間距 */
+  font-size: 1.8rem; /* 放大標題 */
   text-align: center;
   font-weight: 600;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+/* 為標題添加裝飾線 */
+.weather-section h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #74b9ff, #0984e3);
+  border-radius: 2px;
 }
 
 /* Weather Grid Layout */
 .weather-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 2rem; /* 增加卡片間距 */
+  margin-bottom: 3rem; /* 增加底部間距 */
+  max-width: 1000px; /* 限制最大寬度 */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .weather-info-card {
   background: rgba(26, 26, 46, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-radius: 16px; /* 增加圓角 */
+  padding: 2rem 1.5rem; /* 調整內邊距 */
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2); /* 柔化陰影 */
   text-align: center;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease; /* 延長動畫時間 */
   backdrop-filter: blur(10px);
   position: relative;
+  min-height: 160px; /* 統一卡片高度 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .weather-info-card::before {
@@ -133,8 +155,8 @@ main {
 }
 
 .weather-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+  font-size: 3rem; /* 放大圖標 */
+  margin-bottom: 1.2rem;
   transition: all 0.3s ease;
 }
 
@@ -143,20 +165,21 @@ main {
 }
 
 .weather-label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #a0aec0;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
+  margin-bottom: 0.8rem; /* 增加間距 */
+  font-weight: 600; /* 加粗標籤 */
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px; /* 增加字母間距 */
 }
 
 .weather-value {
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 1.8rem; /* 放大數值 */
+  font-weight: 700; /* 加粗數值 */
   color: #f8f9fa;
   margin-bottom: 0.5rem;
   transition: all 0.3s ease;
+  line-height: 1.2;
 }
 
 .weather-info-card:hover .weather-value {
@@ -214,12 +237,12 @@ main {
   background: linear-gradient(135deg, #74b9ff, #0984e3);
   color: white;
   text-align: center;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  font-size: 1.3rem;
-  font-weight: 600;
-  box-shadow: 0 4px 20px rgba(116, 185, 255, 0.2);
+  padding: 2rem; /* 增加內邊距 */
+  border-radius: 16px; /* 統一圓角 */
+  margin-bottom: 2rem; /* 增加底部間距 */
+  font-size: 1.5rem; /* 放大字體 */
+  font-weight: 700; /* 加粗 */
+  box-shadow: 0 6px 25px rgba(116, 185, 255, 0.3);
   transition: all 0.3s ease;
 }
 
@@ -232,10 +255,10 @@ main {
 .weather-card {
   background: rgba(26, 26, 46, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  margin-bottom: 1rem;
+  border-radius: 16px; /* 統一圓角 */
+  padding: 2rem; /* 增加內邊距 */
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+  margin-bottom: 2rem; /* 增加間距 */
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 }
@@ -248,10 +271,11 @@ main {
 
 .weather-card h3 {
   color: #74b9ff;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-  font-weight: 600;
+  margin-bottom: 1.5rem; /* 增加間距 */
+  font-size: 1.4rem; /* 放大標題 */
+  font-weight: 700; /* 加粗 */
   transition: all 0.3s ease;
+  text-align: center; /* 居中對齊 */
 }
 
 .weather-card:hover h3 {
@@ -261,18 +285,25 @@ main {
 
 .weather-info {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(180px, 1fr)
+  ); /* 調整最小寬度 */
+  gap: 1.5rem; /* 增加間距 */
+  margin-top: 1.5rem;
 }
 
 .info-item {
   text-align: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  padding: 1.5rem 1rem; /* 調整內邊距 */
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px; /* 增加圓角 */
   transition: all 0.3s ease;
+  min-height: 100px; /* 統一高度 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .info-item:hover {
@@ -281,42 +312,40 @@ main {
 }
 
 .info-label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #a0aec0;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem; /* 增加間距 */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .info-value {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.3rem; /* 放大數值 */
+  font-weight: 700; /* 加粗 */
   color: #74b9ff;
-}
-
-.info-value.probability {
-  color: #00cec9;
-}
-
-.info-value.temperature {
-  color: #fd79a8;
+  line-height: 1.2;
 }
 
 /* Search Form */
 .search-form {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem; /* 增加間距 */
+  margin-bottom: 3rem; /* 增加底部間距 */
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap; /* 允許換行 */
 }
 
 #location-input {
-  padding: 0.8rem 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  padding: 1rem 2rem; /* 增加內邊距 */
+  border: 2px solid rgba(255, 255, 255, 0.2); /* 加粗邊框 */
+  border-radius: 25px; /* 增加圓角 */
   background: rgba(26, 26, 46, 0.9);
   color: #f8f9fa;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  font-size: 1rem;
-  width: 350px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  font-size: 1.1rem; /* 放大字體 */
+  width: 400px; /* 增加寬度 */
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 }
@@ -339,16 +368,17 @@ main {
 }
 
 button {
-  padding: 0.8rem 2rem;
+  padding: 1rem 2.5rem; /* 增加內邊距 */
   background: linear-gradient(135deg, #00b894, #74b9ff);
   color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: 25px; /* 增加圓角 */
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem; /* 放大字體 */
+  font-weight: 700; /* 加粗 */
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 184, 148, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 184, 148, 0.3);
+  min-width: 120px; /* 設定最小寬度 */
 }
 
 button:hover {
@@ -364,44 +394,51 @@ button:active {
 /* Weather List */
 .weather-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(400px, 1fr)
+  ); /* 增加最小寬度 */
+  gap: 2rem; /* 增加間距 */
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* Loading */
 .loading {
   text-align: center;
-  padding: 2rem;
+  padding: 3rem 2rem; /* 增加內邊距 */
   color: #a0aec0;
   font-style: italic;
   grid-column: 1 / -1;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px; /* 增加圓角 */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 1.2rem; /* 放大字體 */
 }
 
 /* Error */
 .error {
   background: linear-gradient(135deg, #ff7675, #d63031);
   color: white;
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 1.5rem; /* 增加內邊距 */
+  border-radius: 12px; /* 增加圓角 */
   text-align: center;
-  margin: 1rem 0;
+  margin: 2rem 0; /* 增加間距 */
   grid-column: 1 / -1;
-  box-shadow: 0 4px 15px rgba(255, 118, 117, 0.2);
+  box-shadow: 0 6px 20px rgba(255, 118, 117, 0.3);
+  font-size: 1.1rem; /* 放大字體 */
 }
 
 /* Success */
 .success {
   background: linear-gradient(135deg, #00b894, #00a085);
   color: white;
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 1.5rem; /* 增加內邊距 */
+  border-radius: 12px; /* 增加圓角 */
   text-align: center;
-  margin: 1rem 0;
-  box-shadow: 0 4px 15px rgba(0, 184, 148, 0.2);
+  margin: 2rem 0; /* 增加間距 */
+  box-shadow: 0 6px 20px rgba(0, 184, 148, 0.3);
+  font-size: 1.1rem; /* 放大字體 */
 }
 
 /* 診斷相關樣式 */
@@ -479,61 +516,90 @@ footer {
   background: rgba(0, 0, 0, 0.8);
   color: #a0aec0;
   text-align: center;
-  padding: 2rem 0;
-  margin-top: 4rem;
+  padding: 3rem 0; /* 增加內邊距 */
+  margin-top: 6rem; /* 增加頂部間距 */
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 1rem;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
+  .weather-section {
+    margin-bottom: 3rem; /* 減少手機版間距 */
+  }
+
+  .weather-section h2 {
+    font-size: 1.5rem; /* 調整手機版標題大小 */
+    margin-bottom: 1.5rem;
+  }
+
   header .container {
     flex-direction: column;
     gap: 1rem;
+    padding: 1.5rem 20px; /* 增加內邊距 */
   }
 
   nav ul {
-    gap: 1rem;
+    gap: 1.5rem; /* 增加間距 */
   }
 
   .weather-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: 1fr; /* 手機版單列 */
+    gap: 1.5rem;
+    max-width: 400px; /* 限制手機版寬度 */
   }
 
   .search-form {
     flex-direction: column;
     align-items: center;
+    gap: 1.5rem;
   }
 
   #location-input {
     width: 100%;
-    max-width: 300px;
+    max-width: 350px; /* 增加最大寬度 */
   }
 
   .weather-list {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
-  .metrics-grid {
-    grid-template-columns: 1fr;
+  .weather-info {
+    grid-template-columns: 1fr; /* 手機版單列 */
+    gap: 1rem;
+  }
+
+  .info-item {
+    padding: 1.2rem; /* 調整手機版內邊距 */
   }
 }
 
 @media (max-width: 480px) {
   .weather-grid {
-    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .weather-info-card {
-    padding: 1rem;
+    padding: 1.5rem 1rem; /* 調整小屏幕內邊距 */
+    min-height: 140px;
   }
 
   .weather-icon {
-    font-size: 2rem;
+    font-size: 2.5rem; /* 調整小屏幕圖標大小 */
   }
 
   .weather-value {
-    font-size: 1.4rem;
+    font-size: 1.5rem; /* 調整小屏幕數值大小 */
+  }
+
+  .location-header {
+    padding: 1.5rem; /* 調整小屏幕內邊距 */
+    font-size: 1.2rem;
+  }
+
+  .weather-card {
+    padding: 1.5rem; /* 調整小屏幕內邊距 */
   }
 }
 
