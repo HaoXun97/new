@@ -9,6 +9,9 @@ header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+// 設定時區為台北時間
+date_default_timezone_set('Asia/Taipei');
+
 // 確保輸出緩衝區清空
 ob_clean();
 
@@ -37,7 +40,10 @@ try {
             exit;
             
         case 'list':
-            $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, update_time, created_at FROM weather_data ORDER BY update_time DESC LIMIT 10";
+            $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, 
+                     DATE_FORMAT(CONVERT_TZ(update_time, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as update_time,
+                     DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as created_at 
+                     FROM weather_data ORDER BY update_time DESC LIMIT 10";
             $stmt = $db->prepare($query);
             break;
             
@@ -48,13 +54,19 @@ try {
                 exit;
             }
             
-            $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, update_time, created_at FROM weather_data WHERE location LIKE ? ORDER BY update_time DESC LIMIT 1";
+            $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, 
+                     DATE_FORMAT(CONVERT_TZ(update_time, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as update_time,
+                     DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as created_at 
+                     FROM weather_data WHERE location LIKE ? ORDER BY update_time DESC LIMIT 1";
             $stmt = $db->prepare($query);
             $stmt->bindValue(1, "%{$location}%");
             break;
             
         case 'latest':
-            $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, update_time, created_at FROM weather_data ORDER BY update_time DESC LIMIT 1";
+            $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, 
+                     DATE_FORMAT(CONVERT_TZ(update_time, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as update_time,
+                     DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as created_at 
+                     FROM weather_data ORDER BY update_time DESC LIMIT 1";
             $stmt = $db->prepare($query);
             break;
             
@@ -64,14 +76,11 @@ try {
             break;
             
         case 'recent_by_location':
-            $query = "SELECT w1.id, w1.location, w1.weather_condition, w1.rainfall_probability, w1.min_temperature, w1.max_temperature, w1.comfort_level, w1.update_time, w1.created_at 
-                     FROM weather_data w1 
-                     INNER JOIN (
-                         SELECT location, MAX(update_time) as max_time 
-                         FROM weather_data 
-                         GROUP BY location
-                     ) w2 ON w1.location = w2.location AND w1.update_time = w2.max_time 
-                     ORDER BY w1.update_time DESC";
+            $query = "SELECT id, location, weather_condition, rainfall_probability, min_temperature, max_temperature, comfort_level, 
+                     DATE_FORMAT(CONVERT_TZ(update_time, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as update_time,
+                     DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%Y-%m-%d %H:%i:%s') as created_at 
+                     FROM weather_data WHERE location IN (SELECT DISTINCT location FROM weather_data) 
+                     GROUP BY location ORDER BY update_time DESC";
             $stmt = $db->prepare($query);
             break;
             
@@ -105,13 +114,13 @@ try {
             "success" => true,
             "data" => ($action === 'list' || $action === 'all_locations' || $action === 'recent_by_location') ? $result : $result[0],
             "count" => count($result),
-            "timestamp" => date('Y-m-d H:i:s')
+            "timestamp" => date('Y-m-d H:i:s') // 台灣時間戳記
         ]);
     } else {
         echo json_encode([
             "success" => false,
             "message" => "查無資料",
-            "timestamp" => date('Y-m-d H:i:s')
+            "timestamp" => date('Y-m-d H:i:s') // 台灣時間戳記
         ]);
     }
     
@@ -120,7 +129,7 @@ try {
     echo json_encode([
         "success" => false,
         "message" => "伺服器錯誤: " . $e->getMessage(),
-        "timestamp" => date('Y-m-d H:i:s')
+        "timestamp" => date('Y-m-d H:i:s') // 台灣時間戳記
     ]);
 }
 ?>
