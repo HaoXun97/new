@@ -5,26 +5,17 @@ class WeatherApp {
   }
 
   init() {
-    // 先測試API連線
-    this.testAPI()
-      .then(() => {
-        this.loadCurrentWeather();
-        this.loadWeatherList();
-      })
-      .catch((error) => {
-        console.error("API測試失敗:", error);
-        this.showError("API連線失敗，請檢查伺服器狀態");
-      });
+    this.loadTaipeiWeather(); // 改為載入臺北市天氣
+    this.loadWeatherList();
 
     // 設定搜尋事件
-    const locationInput = document.getElementById("location-input");
-    if (locationInput) {
-      locationInput.addEventListener("keypress", (e) => {
+    document
+      .getElementById("location-input")
+      .addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
           this.searchWeather();
         }
       });
-    }
   }
 
   async testAPI() {
@@ -69,6 +60,35 @@ class WeatherApp {
     } catch (error) {
       console.error("API 請求錯誤:", error);
       throw error;
+    }
+  }
+
+  async loadTaipeiWeather() {
+    const container = document.getElementById("current-weather");
+
+    try {
+      // 先嘗試載入臺北市的特定資料
+      const response = await this.fetchWeatherData("location", {
+        location: "臺北",
+      });
+
+      if (response.success && response.data) {
+        container.innerHTML = this.renderWeatherGrid(response.data);
+      } else {
+        // 如果沒有臺北市資料，則載入最新資料
+        const latestResponse = await this.fetchWeatherData("latest");
+        if (latestResponse.success && latestResponse.data) {
+          container.innerHTML = this.renderWeatherGrid(latestResponse.data);
+          // 更新標題顯示實際地點
+          document.querySelector(
+            "#current h2"
+          ).textContent = `即時天氣 - ${latestResponse.data.location}`;
+        } else {
+          container.innerHTML = '<div class="error">目前無可用的氣象資料</div>';
+        }
+      }
+    } catch (error) {
+      container.innerHTML = `<div class="error">載入失敗: ${error.message}</div>`;
     }
   }
 
@@ -148,13 +168,11 @@ class WeatherApp {
   }
 
   renderWeatherGrid(weather) {
-    const updateTime = weather.update_time
-      ? new Date(weather.update_time).toLocaleString("zh-TW")
-      : "無資料";
+    const updateTime = new Date(weather.update_time).toLocaleString("zh-TW");
 
     return `
             <div class="location-header">
-                📍 ${weather.location || "未知地點"}
+                📍 ${weather.location}
             </div>
             
             <div class="weather-info-card">
@@ -169,9 +187,7 @@ class WeatherApp {
                 <div class="weather-icon">🌧️</div>
                 <div class="weather-label">降雨機率</div>
                 <div class="weather-value probability">${
-                  weather.rainfall_probability !== null
-                    ? weather.rainfall_probability
-                    : "--"
+                  weather.rainfall_probability || "--"
                 }%</div>
             </div>
             
@@ -179,9 +195,7 @@ class WeatherApp {
                 <div class="weather-icon">🌡️</div>
                 <div class="weather-label">最低溫度</div>
                 <div class="weather-value temperature">${
-                  weather.min_temperature !== null
-                    ? weather.min_temperature
-                    : "--"
+                  weather.min_temperature || "--"
                 }°C</div>
             </div>
             
@@ -189,9 +203,7 @@ class WeatherApp {
                 <div class="weather-icon">🌡️</div>
                 <div class="weather-label">最高溫度</div>
                 <div class="weather-value temperature">${
-                  weather.max_temperature !== null
-                    ? weather.max_temperature
-                    : "--"
+                  weather.max_temperature || "--"
                 }°C</div>
             </div>
             
@@ -267,9 +279,7 @@ class WeatherApp {
 
 // 全局函數供HTML調用
 function searchWeather() {
-  if (window.weatherApp) {
-    window.weatherApp.searchWeather();
-  }
+  window.weatherApp.searchWeather();
 }
 
 // 初始化應用程式
