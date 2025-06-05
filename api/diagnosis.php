@@ -175,89 +175,203 @@ try {
         }
     }
     
-    // 4. API 端點檢測
+    // 4. API 端點檢測 - 改進版本
     $apiEndpoints = [
         'list' => 'api/weather.php?action=list',
         'latest' => 'api/weather.php?action=latest',
-        'all_locations' => 'api/weather.php?action=all_locations'
+        'all_locations' => 'api/weather.php?action=all_locations',
+        'test' => 'api/weather.php?action=test'
     ];
     
     $apiResults = [];
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'];
+    
     foreach ($apiEndpoints as $name => $endpoint) {
+        $startTime = microtime(true);
         try {
-            $url = "http://" . $_SERVER['HTTP_HOST'] . "/" . $endpoint;
-            $context = stream_context_create([
-                'http' => [
-                    'timeout' => 5,
-                    'method' => 'GET'
+            // 構建完整的 URL
+            $baseUrl = rtrim(dirname(dirname($_SERVER['REQUEST_URI'])), '/');
+            $url = "$protocol://$host$baseUrl/$endpoint";
+            
+            // 使用 cURL 而不是 file_get_contents 以獲得更好的控制
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_USERAGENT => 'Weather System Diagnosis Tool',
+                CURLOPT_HTTPHEADER => [
+                    'Accept: application/json',
+                    'Cache-Control: no-cache'
                 ]
             ]);
             
-            $response = @file_get_contents($url, false, $context);
-            if ($response !== false) {
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            $responseTime = round((microtime(true) - $startTime) * 1000, 2);
+            curl_close($ch);
+            
+            if ($response === false || !empty($curlError)) {
+                $apiResults[$name] = [
+                    'status' => 'error',
+                    'response_code' => 'curl_error',
+                    'response_time' => $responseTime . 'ms',
+                    'success' => false,
+                    'error' => $curlError ?: 'cURL request failed',
+                    'url' => $url
+                ];
+            } elseif ($httpCode !== 200) {
+                $apiResults[$name] = [
+                    'status' => 'error',
+                    'response_code' => $httpCode,
+                    'response_time' => $responseTime . 'ms',
+                    'success' => false,
+                    'error' => "HTTP $httpCode error",
+                    'url' => $url,
+                    'response_preview' => substr($response, 0, 200)
+                ];
+            } else {
                 $data = json_decode($response, true);
-                if ($data && isset($data['success'])) {
-                    $apiResults[$name] = [
-                        'status' => 'healthy',
-                        'response_code' => 200,
-                        'success' => $data['success']
-                    ];
-                } else {
+                if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
                     $apiResults[$name] = [
                         'status' => 'warning',
                         'response_code' => 200,
+                        'response_time' => $responseTime . 'ms',
                         'success' => false,
-                        'error' => 'Invalid JSON response'
+                        'error' => 'Invalid JSON response: ' . json_last_error_msg(),
+                        'url' => $url,
+                        'response_preview' => substr($response, 0, 200)
+                    ];
+                } else {
+                    $apiResults[$name] = [
+                        'status' => isset($data['success']) && $data['success'] ? 'healthy' : 'warning',
+                        'response_code' => 200,
+                        'response_time' => $responseTime . 'ms',
+                        'success' => isset($data['success']) ? $data['success'] : true,
+                        'url' => $url,
+                        'data_count' => isset($data['count']) ? $data['count'] : null
                     ];
                 }
-            } else {
-                $apiResults[$name] = [
-                    'status' => 'error',
-                    'response_code' => 'timeout',
-                    'success' => false,
-                    'error' => 'Request timeout'
-                ];
             }
         } catch (Exception $e) {
+            $responseTime = round((microtime(true) - $startTime) * 1000, 2);
             $apiResults[$name] = [
                 'status' => 'error',
-                'response_code' => 'error',
+                'response_code' => 'exception',
+                'response_time' => $responseTime . 'ms',
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'url' => isset($url) ? $url : 'URL construction failed'
             ];
         }
     }
     
+    // 分析 API 整體狀態
     $healthyApis = array_filter($apiResults, function($result) {
         return $result['status'] === 'healthy';
     });
     
-    $apiStatus = 'healthy';
-    $apiMessage = '所有 API 端點正常';
+    $warningApis = array_filter($apiResults, function($result) {
+        return $result['status'] === 'warning';
+    });
     
-    if (count($healthyApis) === 0) {
+    $errorApis = array_filter($apiResults, function($result) {
+        return $result['status'] === 'error';
+    });
+    
+    $totalApis = count($apiResults);
+    $healthyCount = count($healthyApis);
+    $warningCount = count($warningApis);
+    $errorCount = count($errorApis);
+    
+    // 計算平均回應時間
+    $responseTimes = array_filter(array_map(function($result) {
+        return isset($result['response_time']) ? floatval(str_replace('ms', '', $result['response_time'])) : null;
+    }, $apiResults));
+    
+    $avgResponseTime = !empty($responseTimes) ? round(array_sum($responseTimes) / count($responseTimes), 2) : 0;
+    
+    if ($errorCount === $totalApis) {
         $apiStatus = 'error';
-        $apiMessage = '所有 API 端點異常';
+        $apiMessage = '所有 API 端點都無法訪問';
         $diagnosis['overall_status'] = 'error';
-    } elseif (count($healthyApis) < count($apiResults)) {
+    } elseif ($errorCount > 0) {
         $apiStatus = 'warning';
-        $apiMessage = '部分 API 端點異常';
+        $apiMessage = "有 $errorCount 個 API 端點異常，$healthyCount 個正常";
         if ($diagnosis['overall_status'] === 'healthy') {
             $diagnosis['overall_status'] = 'warning';
         }
+    } elseif ($warningCount > 0) {
+        $apiStatus = 'warning';
+        $apiMessage = "有 $warningCount 個 API 端點有警告，$healthyCount 個正常";
+        if ($diagnosis['overall_status'] === 'healthy') {
+            $diagnosis['overall_status'] = 'warning';
+        }
+    } else {
+        $apiStatus = 'healthy';
+        $apiMessage = '所有 API 端點正常運作';
     }
     
     $diagnosis['components']['api_endpoints'] = [
         'status' => $apiStatus,
         'message' => $apiMessage,
         'details' => [
-            'total_endpoints' => count($apiResults),
-            'healthy_endpoints' => count($healthyApis),
+            'total_endpoints' => $totalApis,
+            'healthy_endpoints' => $healthyCount,
+            'warning_endpoints' => $warningCount,
+            'error_endpoints' => $errorCount,
+            'average_response_time' => $avgResponseTime . 'ms',
             'results' => $apiResults
         ]
     ];
     
-    // 5. 系統資源檢測
+    // 5. Web 伺服器檢測 - 新增
+    $webServerInfo = [
+        'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+        'php_version' => phpversion(),
+        'php_sapi' => php_sapi_name(),
+        'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? 'Unknown',
+        'script_filename' => $_SERVER['SCRIPT_FILENAME'] ?? 'Unknown',
+        'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'Unknown',
+        'request_uri' => $_SERVER['REQUEST_URI'] ?? 'Unknown',
+        'query_string' => $_SERVER['QUERY_STRING'] ?? '',
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
+    ];
+    
+    // 檢查重要的 PHP 擴展
+    $requiredExtensions = ['pdo', 'pdo_mysql', 'json', 'curl'];
+    $loadedExtensions = get_loaded_extensions();
+    $missingExtensions = array_diff($requiredExtensions, $loadedExtensions);
+    
+    $webServerStatus = 'healthy';
+    $webServerMessage = 'Web 伺服器配置正常';
+    
+    if (!empty($missingExtensions)) {
+        $webServerStatus = 'warning';
+        $webServerMessage = 'Web 伺服器缺少部分 PHP 擴展: ' . implode(', ', $missingExtensions);
+        if ($diagnosis['overall_status'] === 'healthy') {
+            $diagnosis['overall_status'] = 'warning';
+        }
+    }
+    
+    $diagnosis['components']['web_server'] = [
+        'status' => $webServerStatus,
+        'message' => $webServerMessage,
+        'details' => [
+            'server_info' => $webServerInfo,
+            'required_extensions' => $requiredExtensions,
+            'loaded_extensions_count' => count($loadedExtensions),
+            'missing_extensions' => $missingExtensions,
+            'php_ini_loaded' => php_ini_loaded_file() ?: 'None'
+        ]
+    ];
+    
+    // 6. 系統資源檢測
     $diagnosis['components']['system_resources'] = [
         'status' => 'healthy',
         'message' => '系統資源正常',
@@ -279,7 +393,12 @@ try {
         'timestamp' => date('Y-m-d H:i:s'),
         'overall_status' => 'error',
         'message' => '系統診斷失敗: ' . $e->getMessage(),
-        'components' => []
+        'components' => [],
+        'debug_info' => [
+            'error_file' => $e->getFile(),
+            'error_line' => $e->getLine(),
+            'error_trace' => $e->getTraceAsString()
+        ]
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 }
 

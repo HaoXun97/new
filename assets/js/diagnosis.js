@@ -172,19 +172,111 @@ class DiagnosisApp {
   renderComponentDetails(details) {
     if (!details || typeof details !== "object") return "";
 
-    return Object.entries(details)
-      .map(([key, value]) => {
-        const label = this.getDetailLabel(key);
-        const formattedValue = this.formatDetailValue(key, value);
+    let detailsHtml = "";
 
-        return `
-        <div class="detail-item">
-          <div class="detail-label">${label}</div>
-          <div class="detail-value">${formattedValue}</div>
-        </div>
-      `;
-      })
-      .join("");
+    // 特殊處理 API 端點結果
+    if (details.results && typeof details.results === "object") {
+      detailsHtml += this.renderApiResults(details.results);
+
+      // 移除 results 以避免重複顯示
+      const otherDetails = { ...details };
+      delete otherDetails.results;
+
+      detailsHtml += Object.entries(otherDetails)
+        .map(([key, value]) => {
+          const label = this.getDetailLabel(key);
+          const formattedValue = this.formatDetailValue(key, value);
+
+          return `
+          <div class="detail-item">
+            <div class="detail-label">${label}</div>
+            <div class="detail-value">${formattedValue}</div>
+          </div>
+        `;
+        })
+        .join("");
+    } else {
+      detailsHtml = Object.entries(details)
+        .map(([key, value]) => {
+          const label = this.getDetailLabel(key);
+          const formattedValue = this.formatDetailValue(key, value);
+
+          return `
+          <div class="detail-item">
+            <div class="detail-label">${label}</div>
+            <div class="detail-value">${formattedValue}</div>
+          </div>
+        `;
+        })
+        .join("");
+    }
+
+    return detailsHtml;
+  }
+
+  renderApiResults(results) {
+    if (!results || typeof results !== "object") return "";
+
+    return `
+      <div class="api-results">
+        <div class="api-results-title">API 端點檢測結果:</div>
+        ${Object.entries(results)
+          .map(
+            ([endpoint, result]) => `
+          <div class="api-result-item ${result.status}">
+            <div class="api-endpoint-name">${endpoint.toUpperCase()}</div>
+            <div class="api-endpoint-details">
+              <div class="api-detail">
+                <span class="api-label">狀態:</span>
+                <span class="api-value status-${
+                  result.status
+                }">${this.getStatusText(result.status)}</span>
+              </div>
+              <div class="api-detail">
+                <span class="api-label">HTTP 狀態:</span>
+                <span class="api-value">${result.response_code}</span>
+              </div>
+              <div class="api-detail">
+                <span class="api-label">回應時間:</span>
+                <span class="api-value">${result.response_time || "N/A"}</span>
+              </div>
+              ${
+                result.error
+                  ? `
+                <div class="api-detail error">
+                  <span class="api-label">錯誤:</span>
+                  <span class="api-value">${result.error}</span>
+                </div>
+              `
+                  : ""
+              }
+              ${
+                result.url
+                  ? `
+                <div class="api-detail">
+                  <span class="api-label">URL:</span>
+                  <span class="api-value url">${result.url}</span>
+                </div>
+              `
+                  : ""
+              }
+              ${
+                result.response_preview
+                  ? `
+                <div class="api-detail">
+                  <span class="api-label">回應預覽:</span>
+                  <span class="api-value preview">${result.response_preview}...</span>
+                </div>
+              `
+                  : ""
+              }
+            </div>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `;
   }
 
   renderDetailedInfo() {
@@ -266,10 +358,16 @@ class DiagnosisApp {
         icon: "🗃️",
       },
       api_endpoints: {
-        title: "API 端點異常",
+        title: "API 端點連線異常",
         description:
-          "請檢查 Web 伺服器配置，確認 PHP 檔案權限正確，並檢查 .htaccess 設定。",
+          "API 端點出現 timeout 或連線錯誤。請檢查：1) Web 伺服器是否正常運行 2) PHP 檔案權限是否正確 3) .htaccess 設定是否有效 4) 資料庫連線是否正常 5) 網路連線狀態。建議重啟 Apache 服務並檢查錯誤日誌。",
         icon: "🌐",
+      },
+      web_server: {
+        title: "Web 伺服器配置異常",
+        description:
+          "Web 伺服器配置有問題，請檢查 PHP 擴展是否完整安裝，Apache 模組是否正確載入。",
+        icon: "🖥️",
       },
       data_integrity: {
         title: "資料完整性異常",
@@ -298,9 +396,16 @@ class DiagnosisApp {
         icon: "⏰",
       },
       api_endpoints: {
-        title: "部分 API 異常",
-        description: "某些 API 端點回應異常，建議檢查相關功能並重啟服務。",
+        title: "部分 API 端點異常",
+        description:
+          "某些 API 端點回應時間過長或回傳格式異常。建議檢查資料庫查詢效能，並確認所有依賴服務正常運行。",
         icon: "🔄",
+      },
+      web_server: {
+        title: "Web 伺服器配置警告",
+        description:
+          "Web 伺服器缺少某些 PHP 擴展，可能影響系統功能。建議安裝缺失的擴展以確保完整功能。",
+        icon: "⚙️",
       },
     };
 
@@ -357,6 +462,7 @@ class DiagnosisApp {
       data_integrity: "📊",
       api_endpoints: "🌐",
       system_resources: "💻",
+      web_server: "🖥️",
     };
     return icons[name] || "🔧";
   }
@@ -368,6 +474,7 @@ class DiagnosisApp {
       data_integrity: "資料完整性",
       api_endpoints: "API 端點",
       system_resources: "系統資源",
+      web_server: "Web 伺服器",
     };
     return titles[name] || name;
   }
@@ -386,12 +493,13 @@ class DiagnosisApp {
       freshness: "新鮮度",
       total_endpoints: "端點總數",
       healthy_endpoints: "正常端點",
-      php_version: "PHP 版本",
-      memory_usage: "記憶體使用",
-      memory_peak: "記憶體峰值",
-      disk_free_space: "可用磁碟空間",
-      server_time: "伺服器時間",
-      timezone: "時區",
+      warning_endpoints: "警告端點",
+      error_endpoints: "錯誤端點",
+      server_info: "伺服器資訊",
+      required_extensions: "必要擴展",
+      loaded_extensions_count: "已載入擴展數",
+      missing_extensions: "缺失擴展",
+      php_ini_loaded: "PHP 配置檔",
     };
     return labels[key] || key;
   }

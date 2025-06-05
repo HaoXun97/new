@@ -266,6 +266,116 @@
   border-top: 1px solid #e9ecef;
 }
 
+/* API 結果顯示樣式 */
+.api-results {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.api-results-title {
+  font-weight: bold;
+  color: #495057;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.api-result-item {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #6c757d;
+}
+
+.api-result-item.healthy {
+  background: rgba(0, 184, 148, 0.1);
+  border-left-color: #00b894;
+}
+
+.api-result-item.warning {
+  background: rgba(253, 203, 110, 0.1);
+  border-left-color: #fdcb6e;
+}
+
+.api-result-item.error {
+  background: rgba(255, 118, 117, 0.1);
+  border-left-color: #ff7675;
+}
+
+.api-endpoint-name {
+  font-weight: bold;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.api-endpoint-details {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.api-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.25rem 0;
+}
+
+.api-detail.error {
+  background: rgba(255, 118, 117, 0.1);
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.25rem 0;
+}
+
+.api-label {
+  font-weight: 500;
+  color: #6c757d;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.api-value {
+  color: #495057;
+  text-align: right;
+  flex-grow: 1;
+  word-break: break-all;
+}
+
+.api-value.status-healthy {
+  color: #00b894;
+  font-weight: bold;
+}
+
+.api-value.status-warning {
+  color: #fdcb6e;
+  font-weight: bold;
+}
+
+.api-value.status-error {
+  color: #ff7675;
+  font-weight: bold;
+}
+
+.api-value.url {
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  color: #0984e3;
+}
+
+.api-value.preview {
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  color: #6c757d;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* 響應式設計 */
 @media (max-width: 768px) {
   .components-grid {
@@ -292,6 +402,26 @@
     flex-direction: column;
     text-align: center;
     gap: 0.5rem;
+  }
+
+  .api-detail {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .api-label {
+    min-width: auto;
+    margin-bottom: 0.25rem;
+  }
+
+  .api-value {
+    text-align: left;
+  }
+
+  .api-value.url,
+  .api-value.preview {
+    word-break: break-all;
+    max-width: 100%;
   }
 }
 
