@@ -561,6 +561,30 @@
   background: #138496;
 }
 
+/* 錯誤調試樣式 */
+.error-debug {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.error-debug h3 {
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+
+.error-debug p {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.error-debug strong {
+  color: #495057;
+}
+
 /* 響應式設計 */
 @media (max-width: 768px) {
   .components-grid {

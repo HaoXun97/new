@@ -12,23 +12,66 @@ class DiagnosisApp {
   async runDiagnosis() {
     try {
       this.showLoading();
-      const response = await fetch(this.apiBase);
+
+      console.log("開始診斷，請求:", this.apiBase);
+
+      const response = await fetch(this.apiBase, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      console.log("回應狀態:", response.status, response.statusText);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // 嘗試獲取錯誤詳細資訊
+        let errorText = "";
+        try {
+          errorText = await response.text();
+          console.log("錯誤回應內容:", errorText);
+        } catch (e) {
+          console.log("無法讀取錯誤回應內容");
+        }
+
+        throw new Error(
+          `HTTP ${response.status}: ${response.statusText}${
+            errorText ? "\n詳細錯誤: " + errorText.substring(0, 500) : ""
+          }`
+        );
       }
 
       const contentType = response.headers.get("content-type");
+      console.log("回應類型:", contentType);
+
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
+        console.log("非JSON回應內容:", text.substring(0, 500));
         throw new Error("伺服器回應格式錯誤: " + text.substring(0, 200));
       }
 
       this.diagnosisData = await response.json();
+      console.log("診斷資料:", this.diagnosisData);
+
       this.renderDiagnosis();
     } catch (error) {
       console.error("診斷失敗:", error);
       this.showError("診斷失敗: " + error.message);
+
+      // 顯示更詳細的錯誤訊息供調試
+      const debugContainer = document.getElementById("detailed-info");
+      if (debugContainer) {
+        debugContainer.innerHTML = `
+          <div class="error-debug">
+            <h3>調試資訊</h3>
+            <p><strong>錯誤:</strong> ${error.message}</p>
+            <p><strong>API 端點:</strong> ${this.apiBase}</p>
+            <p><strong>時間:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>建議:</strong> 請檢查伺服器錯誤日誌以獲得更多資訊</p>
+          </div>
+        `;
+      }
     }
   }
 
